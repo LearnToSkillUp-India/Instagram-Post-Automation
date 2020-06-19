@@ -71,21 +71,32 @@ def Draw_multiple_line_text(text, text_color, linespace):
                   line, font=font, fill=text_color)
         y_text1 += max_height_line+linespace
 
+def Add_image_to_template():
+    basewidth = 730
+    image = Image.open("cloud.png")
+    wpercent = (basewidth/float(image.size[0]))
+    hsize = int((float(image.size[1])*float(wpercent)))
+    img = image.resize((basewidth,hsize), Image.ANTIALIAS)
+    #img = PIL.Image.new(mode = "RGB", size = (730, 670), color = (0, 0, 0))
+    im.paste(img,(150,300))
+
+
 DrawShapeTop('rgb(82, 113, 255)')
 DrawShapeBottom('rgb(246, 79, 89)')
 #DrawShapeLeft('rgb(255, 189, 74)')
 DrawShapeRight('rgb(255, 189, 74)')
 DrawHashtag()
+Add_image_to_template()
 
 text2 = "The elections were conducted with the help of online security firm Kaspersky Labs and its blockchain enabled voting platform, Polys."
 text1 = "The vehicle of Infineon’s logistics partner Kühne+Nagel will drive the distance between the factory premises and an external warehouse in the east of the city 4 times per working day."
 #text_start_height = 100
-Draw_multiple_line_text(text1, 'grey',10)
+#Draw_multiple_line_text(text2, 'grey',10)
 #DrawText()
 
 
 im.show()
-im.save('abc.png')
+#im.save('temp2.png')
 '''mask = im.resize((w, h), Image.ANTIALIAS)
 mask.show() 
 mask.save('abc1.png')'''
