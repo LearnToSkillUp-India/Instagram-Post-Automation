@@ -1,5 +1,6 @@
 # Instagram-Post-Automation
-Automate the creation of posts on Instagram.
+
+## Automate the creation of posts on Instagram.
 
 The script is designed for a grid of 9 posts. Thus post numbers will be from 1 to 9. There are 2 modes - **single** posts and **slider** posts.
 
@@ -12,7 +13,7 @@ After selecting modes, there are 3 options:
 
 The text and image path has to be pasted as it is.
 
-For slides having images, you can continue to make changes with the image and scale it as required. 
+For slides having images, you can continue to make changes with the image and scale it till you get required result. **Scaling by 2 will half the width and height, and scaling by 0.5 will double it.** 
 
 Similarly for slides having text, you can continue to make changes for maximum number characters in a line.
 
