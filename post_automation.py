@@ -71,7 +71,7 @@ def DrawCustomText():                                                   #functio
     print(w2,h2)
     draw.text((100,400), text, fill='grey', font = font)
 
-def Draw_multiple_line_text(text, font_used, text_color, linespace, text_wrap_number):    #function to automatically drar text with wordwrap
+def Draw_multiple_line_text(text, font_used, text_color, linespace, text_wrap_number, text_shift_up_by):    #function to automatically drar text with wordwrap
     font = font_used
     lines = textwrap.wrap(text, width=text_wrap_number)                        #textwrap method to automatically shift words to newline if crowded
     width_list, height_list = [],[]
@@ -84,21 +84,32 @@ def Draw_multiple_line_text(text, font_used, text_color, linespace, text_wrap_nu
     y_text = (max_height_line + linespace) * len(lines)                        #our bounding box for text would be of length 'max_width_line' and height 'y_text'
     #print(max_width_line, y_text)
     x_text1 = (w - max_width_line) / 2                                         #new calculated coordinates for text
-    y_text1 = (h - y_text) / 2
+    y_text1 = (h - y_text) / 2 - text_shift_up_by                              #text_shift_up_by will shift text up when image is also there
+    y_text1_next_line = y_text1
+    print('y_text1 = ', y_text1)
     for line in lines:
-        draw.text((x_text1, y_text1), 
+        draw.text((x_text1, y_text1_next_line), 
                   line, font=font, fill=text_color)
-        y_text1 += max_height_line+linespace
-    return(max_width_line, y_text, width_list, height_list)                    #return following values to work outside function
+        y_text1_next_line += max_height_line+linespace
+    return(max_width_line, y_text, y_text1, width_list, height_list)                    #return following values to work outside function
 
-def Add_image_to_template(image_path):                                                  #function to paste an image to template
-    basewidth = 730
+
+def get_resized_image(image_path, scale_factor):                                          #function to get size of resize image; scale_factor used to scale image
     image = Image.open(image_path)
-    wpercent = (basewidth/float(image.size[0]))
-    hsize = int((float(image.size[1])*float(wpercent)))
-    img = image.resize((basewidth,hsize), Image.ANTIALIAS)
-    #img = PIL.Image.new(mode = "RGB", size = (730, 670), color = (0, 0, 0))
-    im.paste(img,(150,300))
+    x_resize, y_resize = (image.size[0]/scale_factor), (image.size[1]/scale_factor)
+    print(x_resize, y_resize)
+    img = image.resize((int(x_resize), int(y_resize)), Image.ANTIALIAS)
+    img_w, img_h = img.size
+    print(img_w, img_h)
+    return(img_w, img_h, img)
+
+def Add_image_to_template(shift_down_by):                                                  #function to paste an image to template; shift_down_by will shift image down when text is also there   
+    img_w, img_h, img = get_resized_image(image_path, scale_factor)
+    x = (w - img_w)/2
+    y = (h - img_h)/2 + shift_down_by
+    im.paste(img,(int(x),int(y)))
+    return(img_w, img_h)
+
 
 def gets(msg, *types):                                                                  #modified input method for variable arguments
     return tuple([types[i](val) for i, val in enumerate(input(msg).split(' '))])
@@ -124,9 +135,18 @@ for i in range(0,count):
     print("[Post number : {}] --- [Mode : {}] --- [Slide: {}]".format(post_number, mode, i+1))
     keep_going = True
     while keep_going:
-        image_or_text = int(input("\nPress '1' for adding text and '2' for adding image: "))    
-        if image_or_text == 2:
+        image_or_text = int(input("\nPress '1' for adding text, '2' for adding image and '3' for adding image and text: "))    
+        shift_down_by = 0
+        text_shift_up_by = 0
+        if image_or_text == 2 or image_or_text == 3:
             image_path = input("\nEnter Image Path: ")
+            scale_factor = int(input("\nEnter Scaling Factor:"))
+            img_width, img_height, _ = get_resized_image(image_path, scale_factor)
+
+            if image_or_text == 3:
+                text = input("\nEnter the text (Paste it directly): ")
+                text_shift_up_by = img_height/2
+                keep_going = False
             keep_going = False
         elif image_or_text == 1:
             text = input("\nEnter the text (Paste it directly): ")
@@ -143,21 +163,33 @@ for i in range(0,count):
         DrawHashtag()
         safety_number_width = 0                                                             #safety number is to reduce size of pipes if it overlaps with text
         safety_number_height = 0
-        if image_or_text == 2:
-            Add_image_to_template(image_path)
-        elif image_or_text == 1:
+
+        if image_or_text == 1 or image_or_text == 3:
             print("***\nMaximum number of characters in each line. Recommended = 30 or 25***")
             text_wrap_number = int(input("\nEnter maximum number of characters in each line: "))
             if (i+1) == 1:
                 font = ImageFont.truetype('Open_Sans/OpenSans-Bold.ttf',56)
             else:
                 font = ImageFont.truetype('Open_Sans/OpenSans-Regular.ttf',56)
-            text_width, text_height, width_list, height_list = Draw_multiple_line_text(text, font, 'grey', 10, text_wrap_number)
+            text_width, text_height, y_text1, width_list, height_list = Draw_multiple_line_text(text, font, 'grey', 10, text_wrap_number, text_shift_up_by)
+            print(text_height, 'ytext1 = ', y_text1)
             #last_line = width_list[-1:][0]                                                 #for automatic increase of pipe length (remaining)
+            shift_down_by = text_height/2
             if (w-text_width)/2 < 136:
                 safety_number_width = (w-text_width)/2 - 136 - 60                           #-136 to account for +136 in function and -60 to shift back by 60 px
             if (h-text_height)/2 < 136:    
-                safety_number_height = (h-text_height)/2 - 136 - 60     
+                safety_number_height = (h-text_height)/2 - 136 - 60   
+
+        if image_or_text == 2 or image_or_text == 3:
+            print('execute 2')
+            img_width, img_height = Add_image_to_template(shift_down_by)
+            if (w-img_width)/2 < 136:
+                safety_number_width = (w-img_width)/2 - 136 - 60                           #-136 to account for +136 in function and -60 to shift back by 60 px
+            if (h-img_height)/2 < 136:    
+                safety_number_height = (h-img_height)/2 - 136 - 60  
+        if image_or_text == 3:
+            if y_text1 < 136:
+                safety_number_height = y_text1 - 136 - 60
         #text1 = "The vehicle of Infineon’s logistics partner Kühne+Nagel will drive the distance between the factory premises and an external warehouse in the east of the city 4 times per working day."
         print("\n***Enter offset for top, bottom, left, right as a list: [top, bottom, left, right]\n\nExample: 60 0 -60 0 will give offset of 60 for top and -60 for left pipe.***\n")
         offset_list = [int(item) for item in input("Enter the list items : ").split()] 
