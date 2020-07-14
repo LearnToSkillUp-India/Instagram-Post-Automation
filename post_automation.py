@@ -103,11 +103,11 @@ def get_resized_image(image_path, scale_factor):                                
     print(img_w, img_h)
     return(img_w, img_h, img)
 
-def Add_image_to_template(shift_down_by):                                                  #function to paste an image to template; shift_down_by will shift image down when text is also there   
+def Add_image_to_template(base_image, shift_down_by):                                                  #function to paste an image to template; shift_down_by will shift image down when text is also there   
     img_w, img_h, img = get_resized_image(image_path, scale_factor)
     x = (w - img_w)/2
     y = (h - img_h)/2 + shift_down_by
-    im.paste(img,(int(x),int(y)))
+    base_image.paste(img,(int(x),int(y)))
     return(img_w, img_h)
 
 
@@ -140,8 +140,22 @@ for i in range(0,count):
         text_shift_up_by = 0
         if image_or_text == 2 or image_or_text == 3:
             image_path = input("\nEnter Image Path: ")
-            scale_factor = int(input("\nEnter Scaling Factor:"))
-            img_width, img_height, _ = get_resized_image(image_path, scale_factor)
+            keep_going_temp = True
+            while keep_going_temp:
+                scale_factor = float(input("\nEnter Scaling Factor:"))
+                img_width, img_height, _ = get_resized_image(image_path, scale_factor)
+                im_temp = PIL.Image.new(mode = "RGB", size = (1080, 1080), color = (255, 255, 255))
+                w,h = im_temp.size
+                Add_image_to_template(im_temp, shift_down_by)
+                im_temp.show()
+                continue_input_temp = input("\nDo you want to continue making changes? (y/n): ")
+                if continue_input_temp == 'Y' or continue_input_temp == 'y':
+                    keep_going_temp = True
+                elif continue_input_temp == 'N' or continue_input_temp == 'n':
+                    keep_going_temp = False
+                else: 
+                    print("\n***Enter a valid response (Y/N)***")
+                    keep_going_temp = True
 
             if image_or_text == 3:
                 text = input("\nEnter the text (Paste it directly): ")
@@ -182,7 +196,7 @@ for i in range(0,count):
 
         if image_or_text == 2 or image_or_text == 3:
             print('execute 2')
-            img_width, img_height = Add_image_to_template(shift_down_by)
+            img_width, img_height = Add_image_to_template(im, shift_down_by)
             if (w-img_width)/2 < 136:
                 safety_number_width = (w-img_width)/2 - 136 - 60                           #-136 to account for +136 in function and -60 to shift back by 60 px
             if (h-img_height)/2 < 136:    
