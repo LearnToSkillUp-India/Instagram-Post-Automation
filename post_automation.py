@@ -22,8 +22,8 @@ def DrawShapeTop(color, position, safety_number, offset):                   #fun
 
 def DrawShapeBottom(color, position, safety_number, offset):                #function to draw bottom pipe
     if position == 'left':
-        bottom_x1 = 135
-        bottom_x2 = 243
+        bottom_x1 = 108 #135
+        bottom_x2 = 216 #243
     elif position == 'right':
         bottom_x1 = 863
         bottom_x2 = 971
@@ -111,8 +111,8 @@ def Add_image_to_template(base_image, shift_down_by):                           
     return(img_w, img_h)
 
 
-def gets(msg, *types):                                                                  #modified input method for variable arguments
-    return tuple([types[i](val) for i, val in enumerate(input(msg).split(' '))])
+def gets(msg, delim, *types):                                                                  #modified input method for variable arguments
+    return tuple([types[i](val) for i, val in enumerate(input(msg).split(delim))])
 
 def draw_pipes(func_list, example_list, number):                                        #function to draw pipes according to the need
     for f in func_list:
@@ -122,21 +122,38 @@ def draw_pipes(func_list, example_list, number):                                
 
 red, yellow, blue = 'rgb(246, 79, 89)', 'rgb(255, 189, 74)', 'rgb(82, 113, 255)'      
 offset_list = []
-msg = "Enter Post Number, Mode (slider/single) and number of slider posts\n(Example '3 slider 8' or '3 single 1')\n"
-post_number, mode, slider_number = gets(msg, int, str, int)
-if mode == 'single':
-    count = 1
-elif mode == 'slider':
-    count = slider_number
+separate_post = input("Want to create one custom separate post? (y/n): ")               #separate post to correct mistakes/redo in between posts
+if separate_post.lower() == 'y':
+    msg = "Enter Post Number and slide number\n(Example '3,2' for 2nd slide of 3rd post)\n"
+    post_number, slider_number = gets(msg, ',', int, int)                               #slider_number will denote the slide number (used in draw pipes function as well)
+    count = 1                                                                           #for single post - extension for multiple posts correction TBD
+    mode = "Custom Separate Post"                                                       #mode for keeping track in message
+
+elif separate_post.lower() == 'n':
+    msg = "Enter Post Number, Mode (slider/single) and number of slider posts\n(Example '3 slider 8' or '3 single 1')\n"
+    post_number, mode, slider_number = gets(msg, ' ', int, str, int)
+    if mode == 'single':
+        count = 1
+    elif mode == 'slider':
+        count = slider_number
+    else:
+        print("Warning! Invalid mode.")
+        sys.exit()
 else:
-    print("Warning! Invalid mode.")
+    print("Enter valid choice!")
     sys.exit()
 for i in range(0,count):
-    print("[Post number : {}] --- [Mode : {}] --- [Slide: {}]".format(post_number, mode, i+1))
-    keep_going = True
+    if separate_post.lower() == 'y':
+        print("[Post number : {}] --- [Mode : {}] --- [Slide: {}]".format(post_number, mode, slider_number))   
+        slider_number -= 1                                                                                     #To keep in accordance to index (beginning from 0)
+        #print(slider_number)
+    else:
+        print("[Post number : {}] --- [Mode : {}] --- [Slide: {}]".format(post_number, mode, i+1))
+        slider_number = i                                                                                      #since we used slider_number in the draw_pipes function
+    keep_going = True                                                                                          #and also in if,elif,else for post_number instead of i
     while keep_going:
         image_or_text = int(input("\nPress '1' for adding text, '2' for adding image and '3' for adding image and text: "))    
-        shift_down_by = 0
+        shift_down_by = 0                                                                                       #image shifting down
         text_shift_up_by = 0
         if image_or_text == 2 or image_or_text == 3:
             image_path = input("\nEnter Image Path: ")
@@ -181,11 +198,11 @@ for i in range(0,count):
         if image_or_text == 1 or image_or_text == 3:
             print("***\nMaximum number of characters in each line. Recommended = 30 or 25***")
             text_wrap_number = int(input("\nEnter maximum number of characters in each line: "))
-            if (i+1) == 1:
+            if (slider_number+1) == 1:
                 font = ImageFont.truetype('Open_Sans/OpenSans-Bold.ttf',56)
             else:
                 font = ImageFont.truetype('Open_Sans/OpenSans-Regular.ttf',56)
-            text_width, text_height, y_text1, width_list, height_list = Draw_multiple_line_text(text, font, 'grey', 10, text_wrap_number, text_shift_up_by)
+            text_width, text_height, y_text1, width_list, height_list = Draw_multiple_line_text(text, font, 'rgb(102,102,102)', 10, text_wrap_number, text_shift_up_by)
             print(text_height, 'ytext1 = ', y_text1)
             #last_line = width_list[-1:][0]                                                 #for automatic increase of pipe length (remaining)
             shift_down_by = text_height/2
@@ -208,7 +225,7 @@ for i in range(0,count):
         print("\n***Enter offset for top, bottom, left, right as a list: [top, bottom, left, right]\n\nExample: 60 0 -60 0 will give offset of 60 for top and -60 for left pipe.***\n")
         offset_list = [int(item) for item in input("Enter the list items : ").split()] 
 
-        if (i+1) == 1:
+        if (slider_number+1) == 1:
             post1 = {'DrawShapeTop': [red, 'right', safety_number_height, offset_list[0]],           #usage of dictionaries to avoid redundancy using if...else
                      'DrawShapeBottom': [yellow, 'left', safety_number_height, offset_list[1]],      #for every different single and slider post
                      'DrawShapeLeft': [blue, 'top', safety_number_width, offset_list[2]]}
@@ -258,7 +275,7 @@ for i in range(0,count):
                               '9': [DrawShapeBottom, DrawShapeLeft, DrawShapeRight]}
             draw_pipes(post_func_dict['{}'.format(post_number)], post_list, post_number)
         
-        elif (i+1) == 2: 
+        elif (slider_number+1) == 2: 
             color = yellow
             color1 = red
             position = 'bottom'
@@ -331,7 +348,8 @@ for i in range(0,count):
                                    '8': [DrawShapeBottom, DrawShapeLeft, DrawShapeRight],
                                    '9': [DrawShapeTop, DrawShapeLeft, DrawShapeRight],
                                    '10': [DrawShapeTop, DrawShapeBottom, DrawShapeLeft]}
-            draw_pipes(com_post3_func_dict['{}'.format(i+1)], com_post3_list, i+1-2)                #i+1-2 will make com_post3 list to start finding from index 0
+            #draw_pipes(com_post3_func_dict['{}'.format(i+1)], com_post3_list, i+1-2)                #i+1-2 will make com_post3 list to start finding from index 0
+            draw_pipes(com_post3_func_dict['{}'.format(slider_number+1)], com_post3_list, slider_number+1-2)                #i+1-2 will make com_post3 list to start finding from index 0
 
 
         im.show()
@@ -343,5 +361,8 @@ for i in range(0,count):
         else: 
             print("\n***Enter a valid response (Y/N)***")
             keep_going1 = True
-    im.save('{}_{}.png'.format(post_number, i+1))
+    if separate_post.lower() == 'y':
+        im.save('{}_{}_{}.png'.format('custom', post_number, slider_number+1))
+    else:
+        im.save('{}_{}.png'.format(post_number, i+1))
 
