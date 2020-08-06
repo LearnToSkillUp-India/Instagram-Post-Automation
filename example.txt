@@ -1,0 +1,18 @@
+[1]Slide 01: Do you know about the Starlink project of SpaceX?
+
+[3]Slide 02: Source: www.starlink.com
+Image path: /home/saurabh/Desktop/Programming/Python Scripts/Post Automation/starlink.png
+
+[1]Slide 03: The Starlink project has a satellite constellation which aims to provide high speed broadband internet to locations where access is unreliable, expensive, or completely unavailable.
+
+[1]Slide 04: Currently SpaceX has launched 540 Starlink satellites. According to them a minimum of 800 satellites are needed to provide moderate coverage over the US.
+
+[1]Slide 05: SpaceX has planned to launch 30,000 additional satellites to its existing plan of 12,000 making a total of 42,000 satellites to be launched.
+
+[3]Slide 06: 60 starlink satellites stacked together before deployment
+Image path: /home/saurabh/Desktop/Programming/Python Scripts/Post Automation/starlink_satellite.jpg
+
+[1]Slide 07: Each of SpaceX's monthly launches consists of 60 internet-beaming Starlink satellites carrying 4,000 stripped-back Linux computers.
+
+[1]Slide 08: SpaceX uses its own Linux Distribution called PREEMPT_RT that has several custom drivers to interface with its hardware, which forms a distributed computer system.
+
