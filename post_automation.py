@@ -3,9 +3,10 @@ Script Author: Saurabh S. Fegade
 Script Purpose: To automate Instagram Post Design and Creation for Learn To Skill Up
 """
 import sys
+import re
+import textwrap
 import PIL
 from PIL import Image, ImageDraw, ImageFont
-import textwrap
 
 def DrawShapeTop(color, position, safety_number, offset):                   #function to draw top pipe
     if position == 'left':
@@ -103,7 +104,7 @@ def get_resized_image(image_path, scale_factor):                                
     print(img_w, img_h)
     return(img_w, img_h, img)
 
-def Add_image_to_template(base_image, shift_down_by):                                                  #function to paste an image to template; shift_down_by will shift image down when text is also there   
+def Add_image_to_template(base_image, shift_down_by):                                          #function to paste an image to template; shift_down_by will shift image down when text is also there   
     img_w, img_h, img = get_resized_image(image_path, scale_factor)
     x = (w - img_w)/2
     y = (h - img_h)/2 + shift_down_by
@@ -119,6 +120,15 @@ def draw_pipes(func_list, example_list, number):                                
         temp_dict = example_list[number-1]                                              #number would be different for each instance
         f(*temp_dict['{}'.format(f.__name__)])                                          #*args to pass list parameters
 
+def get_text_from_file(file_path):                                                      #function to get text from file in form of list
+    with open(file_path, 'r') as file:
+        #data = file.readlines()
+        temp = [(line.rstrip() and line.lstrip('') )for line in file.readlines()]       #list comprehension for stripping trailing spaces
+        temp_without_nl = [i for i in temp if i != '']                                  #new list without newline items for indexing without newline
+        #print(temp_without_nl[1][13:-1])
+        return temp_without_nl
+
+#get_text_from_file('example.txt')
 
 red, yellow, blue = 'rgb(246, 79, 89)', 'rgb(255, 189, 74)', 'rgb(82, 113, 255)'      
 offset_list = []
@@ -142,21 +152,37 @@ elif separate_post.lower() == 'n':
 else:
     print("Enter valid choice!")
     sys.exit()
+
+content_path = input("Copy the path of the content text file: \n")
+content_list = get_text_from_file(content_path)
+
 for i in range(0,count):
     if separate_post.lower() == 'y':
         print("[Post number : {}] --- [Mode : {}] --- [Slide: {}]".format(post_number, mode, slider_number))   
+        index = slider_number                                                                                  #separate variable index for regex pattern matching
         slider_number -= 1                                                                                     #To keep in accordance to index (beginning from 0)
         #print(slider_number)
     else:
         print("[Post number : {}] --- [Mode : {}] --- [Slide: {}]".format(post_number, mode, i+1))
-        slider_number = i                                                                                      #since we used slider_number in the draw_pipes function
-    keep_going = True                                                                                          #and also in if,elif,else for post_number instead of i
+        index = i+1                                                                                            #index is the slide number
+        slider_number = i                                                                                      #since we used slider_number in the draw_pipes function and also in if,elif,else for post_number instead of i
+    for iter_var, item in enumerate(content_list):                                                             #regex searching for slide numbers in file, eg - "08:"
+        if re.search("(0{}:)".format(index), item):
+            print([iter_var])
+            content_index = iter_var
+
+        
+    keep_going = True
     while keep_going:
-        image_or_text = int(input("\nPress '1' for adding text, '2' for adding image and '3' for adding image and text: "))    
+        image_or_text = int(content_list[content_index][1])                                                    #returns 2nd character from string in file for image_or_text
+        #print(image_or_text)
+        #print(content_index)
+        #image_or_text = int(input("\nPress '1' for adding text, '2' for adding image and '3' for adding image and text: "))    
         shift_down_by = 0                                                                                       #image shifting down
         text_shift_up_by = 0
         if image_or_text == 2 or image_or_text == 3:
-            image_path = input("\nEnter Image Path: ")
+            image_path = content_list[content_index+1][12:-1]                                                  #image_path on next line. Slicing to get path
+            #image_path = input("\nEnter Image Path: ")
             keep_going_temp = True
             while keep_going_temp:
                 scale_factor = float(input("\nEnter Scaling Factor:"))
@@ -175,12 +201,16 @@ for i in range(0,count):
                     keep_going_temp = True
 
             if image_or_text == 3:
-                text = input("\nEnter the text (Paste it directly): ")
+                text = content_list[content_index][13:-1]                                                       #slicing to get text
+                #text = input("\nEnter the text (Paste it directly): ")
                 text_shift_up_by = img_height/2
                 keep_going = False
             keep_going = False
+            #content_index += 1
         elif image_or_text == 1:
-            text = input("\nEnter the text (Paste it directly): ")
+            #print(content_index)
+            text = content_list[content_index][13:-1]
+            #text = input("\nEnter the text (Paste it directly): ")
             keep_going = False
         else:
             print("\nWarning! Enter valid choice.")
@@ -203,7 +233,7 @@ for i in range(0,count):
             else:
                 font = ImageFont.truetype('Open_Sans/OpenSans-Regular.ttf',56)
             text_width, text_height, y_text1, width_list, height_list = Draw_multiple_line_text(text, font, 'rgb(102,102,102)', 10, text_wrap_number, text_shift_up_by)
-            print(text_height, 'ytext1 = ', y_text1)
+            #print(text_height, 'ytext1 = ', y_text1)
             #last_line = width_list[-1:][0]                                                 #for automatic increase of pipe length (remaining)
             shift_down_by = text_height/2
             if (w-text_width)/2 < 136:
@@ -212,7 +242,6 @@ for i in range(0,count):
                 safety_number_height = (h-text_height)/2 - 136 - 60   
 
         if image_or_text == 2 or image_or_text == 3:
-            print('execute 2')
             img_width, img_height = Add_image_to_template(im, shift_down_by)
             if (w-img_width)/2 < 136:
                 safety_number_width = (w-img_width)/2 - 136 - 60                           #-136 to account for +136 in function and -60 to shift back by 60 px
