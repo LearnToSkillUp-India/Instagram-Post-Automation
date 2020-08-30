@@ -28,6 +28,6 @@ The posts will be saved accordingly till the count reaches the number of slides 
 
 Remaining work:
 - [X] Automatically insert text and image path from a text file
-- [ ] Save posts by adding post title and by creating a folder
+- [X] Save posts by adding post title and by creating a folder
 - [ ] Automatically increase offset for special cases
-- [ ] Automatically upload to drive after confirmation from user
+- [X] Automatically upload to drive after confirmation from user
