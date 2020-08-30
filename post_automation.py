@@ -2,11 +2,13 @@
 Script Author: Saurabh S. Fegade
 Script Purpose: To automate Instagram Post Design and Creation for Learn To Skill Up
 """
+import os
 import sys
 import re
 import textwrap
 import PIL
 from PIL import Image, ImageDraw, ImageFont
+# from gdrive import DriveUpload
 
 def DrawShapeTop(color, position, safety_number, offset):                   #function to draw top pipe
     if position == 'left':
@@ -64,13 +66,15 @@ def DrawHashtag():                                                      #functio
     #print(w1,h1)
     draw.text((((w-w1)/2), h-1.3*h1), hashtag, fill='black', font = font)  #1.3*h1 to shift hashtag up
 
-def DrawCustomText():                                                   #function for taking custom input text with newlines
-    font = ImageFont.truetype('Open_Sans/OpenSans-Bold.ttf',40)
-    text = '''Lorem ipsum dolor sit amet,\npartem periculis an duo, eum lorem paulo an,\nmazim feugiat lobortis sea ut. 
-    In est error eirmod vituperata, prima iudicabit rationibus mel et.'''
-    w2, h2 = draw.multiline_textsize(text, font, spacing=4)
-    print(w2,h2)
-    draw.text((100,400), text, fill='grey', font = font)
+def DrawCustomText(text, font_used, text_color, height):                                         #function for taking custom input text with newlines
+    font = font_used
+    line_width, line_height = font.getsize(text)
+    x_text = (w - line_width) / 2
+    y_text = (h + height) / 2
+    # w2, h2 = draw.multiline_textsize(text, font, spacing=4)
+    # print(w2,h2)
+    draw.text((x_text, y_text), text, fill=text_color, font = font)
+    return (line_width, line_height)
 
 def Draw_multiple_line_text(text, font_used, text_color, linespace, text_wrap_number, text_shift_up_by):    #function to automatically drar text with wordwrap
     font = font_used
@@ -132,6 +136,14 @@ def get_text_from_file(file_path):                                              
 
 red, yellow, blue = 'rgb(246, 79, 89)', 'rgb(255, 189, 74)', 'rgb(82, 113, 255)'      
 offset_list = []
+
+cwd = os.path.dirname(os.path.realpath(__file__))
+post_dir_name = input("Enter post number and title (Example - Post 13 - Skyroot): ")
+
+
+os.makedirs(post_dir_name, exist_ok=True)
+post_path = os.path.join(cwd, post_dir_name)
+
 separate_post = input("Want to create one custom separate post? (y/n): ")               #separate post to correct mistakes/redo in between posts
 if separate_post.lower() == 'y':
     msg = "Enter Post Number and slide number\n(Example '3,2' for 2nd slide of 3rd post)\n"
@@ -175,11 +187,12 @@ for i in range(0,count):
     keep_going = True
     while keep_going:
         image_or_text = int(content_list[content_index][1])                                                    #returns 2nd character from string in file for image_or_text
-        #print(image_or_text)
-        #print(content_index)
         #image_or_text = int(input("\nPress '1' for adding text, '2' for adding image and '3' for adding image and text: "))    
         shift_down_by = 0                                                                                       #image shifting down
         text_shift_up_by = 0
+        text_shift_up_by_caption = 0
+
+
         if image_or_text == 2 or image_or_text == 3:
             image_path = content_list[content_index+1][12:-1]                                                  #image_path on next line. Slicing to get path
             #image_path = input("\nEnter Image Path: ")
@@ -204,6 +217,8 @@ for i in range(0,count):
                 text = content_list[content_index][13:-1]                                                       #slicing to get text
                 #text = input("\nEnter the text (Paste it directly): ")
                 text_shift_up_by = img_height/2
+                text_shift_up_by_caption = img_height/2
+
                 keep_going = False
             keep_going = False
             #content_index += 1
@@ -229,10 +244,18 @@ for i in range(0,count):
             print("***\nMaximum number of characters in each line. Recommended = 30 or 25***")
             text_wrap_number = int(input("\nEnter maximum number of characters in each line: "))
             if (slider_number+1) == 1:
-                font = ImageFont.truetype('Open_Sans/OpenSans-Bold.ttf',56)
+                font = ImageFont.truetype('Open_Sans/OpenSans-Bold.ttf',60)
             else:
                 font = ImageFont.truetype('Open_Sans/OpenSans-Regular.ttf',56)
-            text_width, text_height, y_text1, width_list, height_list = Draw_multiple_line_text(text, font, 'rgb(102,102,102)', 10, text_wrap_number, text_shift_up_by)
+            print(len(text))
+
+            text_width = text_height = y_text1 = 0
+            if len(text) != 0:
+                text_width, text_height, y_text1, width_list, height_list = Draw_multiple_line_text(text, font, 'rgb(102,102,102)', 10, text_wrap_number, text_shift_up_by)
+
+
+                # text_height *= -1
+                
             #print(text_height, 'ytext1 = ', y_text1)
             #last_line = width_list[-1:][0]                                                 #for automatic increase of pipe length (remaining)
             shift_down_by = text_height/2
@@ -250,6 +273,23 @@ for i in range(0,count):
         if image_or_text == 3:
             if y_text1 < 136:
                 safety_number_height = y_text1 - 136 - 60
+        
+        print(safety_number_height, safety_number_width)
+
+        if re.search("Caption: ", content_list[content_index+2]):
+            custom_height = text_height + img_height
+            safety_number_height = safety_number_width = 0
+            image_caption = content_list[content_index+2][9:-1]
+            print(image_caption)
+            # text_shift_up_by_caption *= -1
+            line_width, line_height = DrawCustomText(image_caption, font, 'rgb(102,102,102)', custom_height)
+            if (w - max(line_width, img_width))/2 < 136:
+                safety_number_width = (w - max(line_width, img_width))/2 - 136 - 60
+            if (h - (line_height + img_height))/2 < 136:
+                safety_number_height = (h - (line_height + img_height))/2 - 136 - 60
+            print(safety_number_height, safety_number_width)
+
+
         #text1 = "The vehicle of Infineon’s logistics partner Kühne+Nagel will drive the distance between the factory premises and an external warehouse in the east of the city 4 times per working day."
         print("\n***Enter offset for top, bottom, left, right as a list: [top, bottom, left, right]\n\nExample: 60 0 -60 0 will give offset of 60 for top and -60 for left pipe.***\n")
         offset_list = [int(item) for item in input("Enter the list items : ").split()] 
@@ -305,6 +345,7 @@ for i in range(0,count):
             draw_pipes(post_func_dict['{}'.format(post_number)], post_list, post_number)
         
         elif (slider_number+1) == 2: 
+            print("here")
             color = yellow
             color1 = red
             position = 'bottom'
@@ -329,10 +370,13 @@ for i in range(0,count):
             
             com_post2_func_dict = {'1': [DrawShapeTop, DrawShapeBottom, DrawShapeRight],
                                    '2': [DrawShapeTop, DrawShapeLeft, DrawShapeRight]}
-            if post_number == (1 or 4 or 7):
+            print(type(post_number))
+            if post_number == 1 or post_number == 4 or post_number == 7:
                 number = 1
+                print("147")
             else:
                 number = 2
+                print("235")
             draw_pipes(com_post2_func_dict['{}'.format(number)], com_post2_list, number)
         
         else:
@@ -391,7 +435,10 @@ for i in range(0,count):
             print("\n***Enter a valid response (Y/N)***")
             keep_going1 = True
     if separate_post.lower() == 'y':
-        im.save('{}_{}_{}.png'.format('custom', post_number, slider_number+1))
+        # im.save('{}_{}_{}.png'.format('custom', post_number, slider_number+1))
+        im.save(os.path.join(post_path,'{}_{}.png'.format(post_number, slider_number+1)))
     else:
-        im.save('{}_{}.png'.format(post_number, i+1))
+        im.save(os.path.join(post_path,'{}_{}.png'.format(post_number, i+1)))
 
+# drive_folder_id = '1-pU2Tvv3yzPu8CrvKr9khlUDlX0zHjid'
+# DriveUpload(post_path, drive_folder_id, post_dir_name)
